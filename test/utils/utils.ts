@@ -89,27 +89,10 @@ async function molochZeroGuildBalance(moloch: ethers.Contract, token: String) {
   await molochPassAndProcess(moloch, propId);
 }
 
-/* async function molochMakeMember(moloch: ethers.Contract, member: String) { */
-/*   const token = await moloch.depositToken(); */
-/*   await moloch.submitProposal( */
-/*     member, */
-/*     1, */
-/*     0, */
-/*     0, */
-/*     token, */
-/*     0, */
-/*     token, */
-/*     "" */
-/*   ); */
-/*   const propId = await moloch.proposalCount() - 1; */
-/*   await molochPassAndProcess(moloch, propId); */
-/* } */
-
-/* async function molochGuildKick(moloch: ethers.Contract, member: String) { */
-/*   await moloch.submitGuildKickProposal(member, ""); */
-/*   const propId = await moloch.proposalCount() - 1; */
-/* await molochPassAndProcess(moloch, propId); */
-/* } */
+/* function totalDist(dist: TokenDistribution) { */
+function totalDist(dist: Record<string, number>) {
+  return Object.keys(dist).reduce((a:number, b:string) => a + dist[b], 0);
+}
 
 function toTransmutationDetails(det: String) {
   return C.TransmutationDetailsPrefix + det + '"}'
@@ -121,5 +104,6 @@ export default {
   getMolochGuildBalNonzero,
   molochZeroGuildBalance,
   bumpTime,
+  totalDist,
   toTransmutationDetails,
 }

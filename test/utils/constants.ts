@@ -2,14 +2,17 @@ import { ethers } from "ethers";
 
 // --- Knight's trust parameters ---
 const vestingDistribution = {
-  "recipients": ["0x1F9975C3A8Bcb23922c53e1ea6478F853029b138", "0xa01D6a90801201cA50266d02e8F88927dd2dA6a6"],
-  "amts": [ 1, 2 ]
+  "recipients": [
+    "0x1F9975C3A8Bcb23922c53e1ea6478F853029b138", 
+    "0xa01D6a90801201cA50266d02e8F88927dd2dA6a6",
+    "0x96F4efaB4Ed5251A493E2C94C8bAffe898748015",
+    "0x75b84Df56ba7ca7E47320Daf7df2f17a1aA8ada8"
+  ],
+  "amts": [ 1, 2, 3, 4 ]
 };
-/* const totalDistribution = vestingDistribution.reduce((sum, dist) => sum + dist.amt, 0); */
 const totalDistribution = vestingDistribution.amts.reduce((a, b) => a + b, 0);
 
-// 1 year
-const vestingPeriod = 31556926
+const oneYear = 31556926
 
 // --- Moloch parameters ---
 const molochConfig = {
@@ -36,8 +39,11 @@ const revertStrings = {
     NOT_MEMBER: "Transmutation::not-member",
     BALANCE: "Transmutation::insufficient-balance"
   },
+  factory: {
+    BAD_DISTRIBUTION: "Factory::invalid-vesting-dist"
+  },
   token: {
-    BALANCE: "token-insufficient-balance"
+    BALANCE: "ERC20: transfer amount exceeds balance"
   }
 }
 
@@ -51,7 +57,7 @@ const systemConstants = {
   molochConfig,
   vestingDistribution,
   totalDistribution,
-  vestingPeriod,
+  oneYear,
   revertStrings,
   CapTokenAmt,
   MolochGuildAddress,

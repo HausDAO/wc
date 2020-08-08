@@ -4,7 +4,7 @@ import { network } from "@nomiclabs/buidler";
 import chai from "chai";
 
 import Transmutation from "../artifacts/Transmutation.json";
-import Token from "../artifacts/DSToken.json";
+import Token from "../artifacts/Token.json";
 import Moloch from "../artifacts/Moloch.json";
 
 import { TransmutationFactories } from "./utils/types";
@@ -46,8 +46,8 @@ describe("Transmutation", () => {
   });
 
   beforeEach("deployContracts", async () => {
-    capTok = await factories.token.deploy('CAP');
-    hausTok = await factories.token.deploy('HAUS');
+    capTok = await factories.token.deploy("name", "CAP");
+    hausTok = await factories.token.deploy("name", "HAUS");
 
     moloch = await factories.moloch.deploy(
       _member,
@@ -60,8 +60,6 @@ describe("Transmutation", () => {
       C.molochConfig.PROCESSING_REWARD,
     );
 
-    /* console.log('fact w/ signer', factories.token); */
-    /* console.log('fact w/o signer', factories.tmut); */
     tmut = await factories.tmut.deploy(
       moloch.address,
       hausTok.address,

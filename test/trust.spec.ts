@@ -5,7 +5,7 @@ import chai from "chai";
 
 // contract artifacts
 import Trust from "../artifacts/Trust.json";
-import Token from "../artifacts/DSToken.json";
+import Token from "../artifacts/Token.json";
 import Moloch from "../artifacts/Moloch.json";
 
 import { KnightsTrustFactories } from "./utils/types";
@@ -28,7 +28,7 @@ describe("Knight's trust", () => {
   let distTok: ethers.Contract;
   let moloch: ethers.Contract;
 
-  before("getProvider", async () => {
+  before("get provider", async () => {
     provider = new ethers.providers.Web3Provider(
       utils.fixProvider(network.provider as any)
     );
@@ -43,8 +43,8 @@ describe("Knight's trust", () => {
   });
 
   beforeEach("deploy contracts", async () => {
-    capTok = await factories.token.deploy('CAP');
-    distTok = await factories.token.deploy('DIST');
+    capTok = await factories.token.deploy("name", 'CAP');
+    distTok = await factories.token.deploy("name", 'DIST');
 
     moloch = await factories.moloch.deploy(
       _owner,
@@ -61,7 +61,7 @@ describe("Knight's trust", () => {
       moloch.address,
       capTok.address,
       distTok.address,
-      C.vestingPeriod,
+      C.oneYear,
       C.vestingDistribution.recipients,
       C.vestingDistribution.amts
     );
@@ -92,7 +92,7 @@ describe("Knight's trust", () => {
       }
 
       const deployTime = (await provider.getBlock(trust.deployTransaction.blockNumber!)).timestamp;
-      expect(await trust.unlockTime()).to.eq(deployTime + C.vestingPeriod);
+      expect(await trust.unlockTime()).to.eq(deployTime + C.oneYear);
     });
   });
 
@@ -103,7 +103,7 @@ describe("Knight's trust", () => {
     });
 
     it("unlocks if vesting time past", async () => {
-      await utils.bumpTime(1, C.vestingPeriod);
+      await utils.bumpTime(1, C.oneYear);
       await trust.unlock();
       expect(await trust.unlocked()).to.be.true;
     });
@@ -115,7 +115,7 @@ describe("Knight's trust", () => {
     });
 
     it("reverts if already unlocked", async () => {
-      await utils.bumpTime(1, C.vestingPeriod);
+      await utils.bumpTime(1, C.oneYear);
       await trust.unlock();
       await expect(trust.unlock()).to.be.revertedWith(C.revertStrings.trust.ALREADY_UNLOCKED);
     })
@@ -130,7 +130,7 @@ describe("Knight's trust", () => {
     });
 
     it("reverts if recipient has 0 distribution", async () => {
-      await utils.bumpTime(1, C.vestingPeriod);
+      await utils.bumpTime(1, C.oneYear);
       await trust.unlock();
       await expect(
         trust.claim(C.AddressZero)
@@ -138,7 +138,7 @@ describe("Knight's trust", () => {
     });
 
     it("cannot be claimed twice", async () => {
-      await utils.bumpTime(1, C.vestingPeriod);
+      await utils.bumpTime(1, C.oneYear);
       await trust.unlock();
       await trust.claim(C.vestingDistribution.recipients[0]);
       await expect(
@@ -147,7 +147,7 @@ describe("Knight's trust", () => {
     });
 
     it("zeroes distribution and transfers tokens", async () => {
-      await utils.bumpTime(1, C.vestingPeriod);
+      await utils.bumpTime(1, C.oneYear);
       await trust.unlock();
 
       const recip = C.vestingDistribution.recipients[0];

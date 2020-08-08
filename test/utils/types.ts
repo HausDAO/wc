@@ -12,7 +12,14 @@ interface TransmutationFactories {
   moloch: ethers.ContractFactory,
 }
 
+interface FactoryFactories {
+  factory: ethers.ContractFactory,
+  token: ethers.ContractFactory,
+  moloch: ethers.ContractFactory
+}
+
 export {
   KnightsTrustFactories,
-  TransmutationFactories
+  TransmutationFactories,
+  FactoryFactories
 }
