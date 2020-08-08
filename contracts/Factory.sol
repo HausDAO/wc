@@ -1,36 +1,37 @@
 pragma solidity 0.5.11;
-// pragma experimental ABIEncoderV2;
+pragma experimental ABIEncoderV2;
 
 import "./Minion.sol";
 import "./Transmutation.sol";
 import "./Trust.sol";
 import "./Token.sol";
 
-// - deploy:
-    // - minion
-    // - haus token
-        // - initial distributions
-    // - vesting contract
-        // - set initial distributinos
-    // - transmutator
 contract Factory {
+
+    event Deployment(
+        address distributionToken,
+        address minion,
+        address transmutation,
+        address trust
+    );
+
+    struct TokenDistribution {
+        uint256 transmutationDist;
+        uint256 trustDist;
+        uint256 minionDist;
+    }
 
     function deployAll(
         address _moloch,
         address _capitalToken,
         uint256 _vestingPeriod,
         string calldata _tokenSymbol,
-        address[] calldata _tokenDistRecipients,
-        uint256[] calldata _tokenDistAmts,
+        TokenDistribution calldata _dist,
         address[] calldata _vestingDistRecipients,
         uint256[] calldata _vestingDistAmts
     )
         external
     {
-        require(
-            _tokenDistRecipients.length == _tokenDistAmts.length,
-            "Factory:invalid-token-dist"
-        );
         require(
             _vestingDistRecipients.length == _vestingDistAmts.length,
             "Factory::invalid-vesting-dist"
@@ -39,25 +40,39 @@ contract Factory {
         Token distributionToken = new Token("name", "SYM");
 
         address minion = address(new Minion(_moloch));
-        new Transmutation(
-            _moloch,
-            address(distributionToken),
-            _capitalToken,
-            minion
+        address transmutation = address(
+                new Transmutation(
+                _moloch,
+                address(distributionToken),
+                _capitalToken,
+                minion
+            )
         );
-        new Trust(
-            _moloch,
-            _capitalToken,
+
+        address trust = address(
+            new Trust(
+                _moloch,
+                _capitalToken,
+                address(distributionToken),
+                _vestingPeriod,
+                _vestingDistRecipients,
+                _vestingDistAmts
+            )
+        );
+
+        emit Deployment(
             address(distributionToken),
-            _vestingPeriod,
-            _vestingDistRecipients,
-            _vestingDistAmts
+            minion,
+            transmutation,
+            trust
         );
 
         // mint initial token distribution
-        for (uint256 i = 0; i < _tokenDistRecipients.length; i++) {
-            distributionToken.mint(_tokenDistRecipients[i], _tokenDistAmts[i]);
-        }
+        distributionToken.mint(minion, _dist.minionDist);
+        distributionToken.mint(trust, _dist.trustDist);
+        distributionToken.mint(transmutation, _dist.transmutationDist);
+
+        // leave token un-mintable
         distributionToken.renounceMinter();
     }
 
