@@ -71,6 +71,7 @@ async function getMolochGuildBalNonzero(moloch: ethers.Contract, holder: String,
     ""
   );
   const propId = await moloch.proposalCount() - 1;
+  await molochPassAndProcess(moloch, propId);
 }
 
 async function molochZeroGuildBalance(moloch: ethers.Contract, token: String) {

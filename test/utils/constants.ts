@@ -1,11 +1,12 @@
 import { ethers } from "ethers";
 
 // --- Knight's trust parameters ---
-const distribution = [
-  {recipient: "0x1F9975C3A8Bcb23922c53e1ea6478F853029b138", amt: 1},
-  {recipient: "0xa01D6a90801201cA50266d02e8F88927dd2dA6a6", amt: 2},
-];
-const totalDistribution = distribution.reduce((sum, dist) => sum + dist.amt, 0);
+const vestingDistribution = {
+  "recipients": ["0x1F9975C3A8Bcb23922c53e1ea6478F853029b138", "0xa01D6a90801201cA50266d02e8F88927dd2dA6a6"],
+  "amts": [ 1, 2 ]
+};
+/* const totalDistribution = vestingDistribution.reduce((sum, dist) => sum + dist.amt, 0); */
+const totalDistribution = vestingDistribution.amts.reduce((a, b) => a + b, 0);
 
 // 1 year
 const vestingPeriod = 31556926
@@ -48,7 +49,7 @@ const AddressOne = "0x0000000000000000000000000000000000000001";
 
 const systemConstants = {
   molochConfig,
-  distribution,
+  vestingDistribution,
   totalDistribution,
   vestingPeriod,
   revertStrings,

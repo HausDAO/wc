@@ -62,7 +62,8 @@ describe("Knight's trust", () => {
       capTok.address,
       distTok.address,
       C.vestingPeriod,
-      C.distribution
+      C.vestingDistribution.recipients,
+      C.vestingDistribution.amts
     );
 
     // set token balances
@@ -85,9 +86,9 @@ describe("Knight's trust", () => {
       expect(await trust.distributionToken()).to.eq(distTok.address);
       expect(await trust.unlocked()).to.be.false;
 
-      for (let i = 0; i < C.distribution.length; i++) {
-        const dist = C.distribution[i];
-        expect(await trust.distributions(dist.recipient)).to.eq(dist.amt);
+      const dist = C.vestingDistribution
+      for (let i = 0; i < dist.recipients.length; i++) {
+        expect(await trust.distributions(dist.recipients[i])).to.eq(dist.amts[i]);
       }
 
       const deployTime = (await provider.getBlock(trust.deployTransaction.blockNumber!)).timestamp;
@@ -123,32 +124,39 @@ describe("Knight's trust", () => {
   describe("claim()", () => {
 
     it("reverts if locked", async () => {
-      await expect(trust.claim(C.distribution[0].recipient)).to.be.revertedWith(C.revertStrings.trust.LOCKED);
+      await expect(
+        trust.claim(C.vestingDistribution.recipients[0])
+      ).to.be.revertedWith(C.revertStrings.trust.LOCKED);
     });
 
     it("reverts if recipient has 0 distribution", async () => {
       await utils.bumpTime(1, C.vestingPeriod);
       await trust.unlock();
-      await expect(trust.claim(C.AddressZero)).to.be.revertedWith(C.revertStrings.trust.NO_DIST);
+      await expect(
+        trust.claim(C.AddressZero)
+      ).to.be.revertedWith(C.revertStrings.trust.NO_DIST);
     });
 
     it("cannot be claimed twice", async () => {
       await utils.bumpTime(1, C.vestingPeriod);
       await trust.unlock();
-      await trust.claim(C.distribution[0].recipient);
-      await expect(trust.claim(C.distribution[0].recipient)).to.be.revertedWith(C.revertStrings.trust.NO_DIST);
+      await trust.claim(C.vestingDistribution.recipients[0]);
+      await expect(
+        trust.claim(C.vestingDistribution.recipients[0])
+      ).to.be.revertedWith(C.revertStrings.trust.NO_DIST);
     });
 
     it("zeroes distribution and transfers tokens", async () => {
       await utils.bumpTime(1, C.vestingPeriod);
       await trust.unlock();
 
-      const dist = C.distribution[0];
-      const bal0 = await distTok.balanceOf(dist.recipient);
+      const recip = C.vestingDistribution.recipients[0];
+      const amt = C.vestingDistribution.amts[0];
+      const bal0 = await distTok.balanceOf(recip);
 
-      await trust.claim(dist.recipient);
-      expect(await trust.distributions(dist.recipient)).to.eq(0);
-      expect(await distTok.balanceOf(dist.recipient)).to.eq(bal0 + dist.amt);
+      await trust.claim(recip);
+      expect(await trust.distributions(recip)).to.eq(0);
+      expect(await distTok.balanceOf(recip)).to.eq(bal0 + amt);
     });
 
   });
