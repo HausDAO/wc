@@ -4,3 +4,5 @@ typechain/
 coverage*
 cache/
 build/
+deploy_params*
+.mnemonic

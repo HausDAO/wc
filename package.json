@@ -10,15 +10,14 @@
   "license": "ISC",
   "devDependencies": {
     "@nomiclabs/buidler": "^1.4.3",
+    "@openzeppelin/contracts": "2.5.0",
     "@types/chai": "^4.2.12",
     "@types/mocha": "^8.0.1",
     "chai": "^4.2.0",
     "ethereum-waffle": "^3.0.2",
     "ethers": "^5.0.8",
+    "prompt-confirm": "^2.0.4",
     "ts-node": "^8.10.2",
     "typescript": "^3.9.7"
-  },
-  "dependencies": {
-    "@openzeppelin/contracts": "2.5.0"
   }
 }

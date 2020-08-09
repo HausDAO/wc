@@ -1,4 +1,6 @@
-import { BuidlerConfig } from "@nomiclabs/buidler/config";
+import { BuidlerConfig, usePlugin } from "@nomiclabs/buidler/config";
+
+import "./scripts/deploy";
 
 const config: BuidlerConfig = {
   defaultNetwork: "buidlerevm",
@@ -9,6 +11,16 @@ const config: BuidlerConfig = {
       runs: 200
     },
   },
+  networks: {
+    develop: {
+      url: "http://localhost:8545",
+    },
+    // TODO
+    rinkeby: {
+      url: "http://localhost:8545",
+    }
+  }
+
 };
 
 export default config;

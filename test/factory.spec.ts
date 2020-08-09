@@ -102,15 +102,15 @@ describe("Factory", () => {
     });
 
     it("works", async () => {
-      await factory.deployAll(
-        moloch.address,
-        capTok.address,
-        C.oneYear,
-        "HAUS",
-        dist,
-        C.vestingDistribution.recipients,
-        C.vestingDistribution.amts
-      );
+      /* await factory.deployAll( */
+      /*   moloch.address, */
+      /*   capTok.address, */
+      /*   C.oneYear, */
+      /*   "HAUS", */
+      /*   dist, */
+      /*   C.vestingDistribution.recipients, */
+      /*   C.vestingDistribution.amts */
+      /* ); */
       const deployReceipt = await factory.deployAll(
         moloch.address,
         capTok.address,
@@ -178,6 +178,10 @@ describe("Factory", () => {
 
       const deployTime = (await provider.getBlock(deployReceipt.blockNumber)).timestamp;
       expect(await trust.unlockTime()).to.eq(deployTime + C.oneYear);
+
+      console.log("---------");
+      console.log('factory deployment gas limit:', factory.deployTransaction.gasLimit.toString());
+      console.log('system deployment gas limit:', deployReceipt.gasLimit.toString());
     });
   })
 });
