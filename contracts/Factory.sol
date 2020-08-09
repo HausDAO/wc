@@ -37,7 +37,7 @@ contract Factory {
             "Factory::invalid-vesting-dist"
         );
 
-        Token distributionToken = new Token("name", "SYM");
+        Token distributionToken = new Token(_tokenSymbol);
 
         address minion = address(new Minion(_moloch));
         address transmutation = address(

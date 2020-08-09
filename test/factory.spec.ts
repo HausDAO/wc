@@ -48,7 +48,7 @@ describe("Factory", () => {
   });
 
   beforeEach("deploy contracts", async () => {
-    capTok = await factories.token.deploy("name", "CAP");
+    capTok = await factories.token.deploy("CAP");
     moloch = await factories.moloch.deploy(
       C.AddressOne,
       [ capTok.address ],
@@ -72,13 +72,15 @@ describe("Factory", () => {
       trustDist: 5
     };
 
+    const tokenSymbol = "HAUS";
+
     it("reverts if vesting distribution lengths don't match", async () => {
       await expect(
         factory.deployAll(
           moloch.address,
           capTok.address,
           C.oneYear,
-          "HAUS",
+          tokenSymbol,
           dist,
           C.vestingDistribution.recipients,
           C.vestingDistribution.amts.slice(1)
@@ -109,7 +111,7 @@ describe("Factory", () => {
         C.vestingDistribution.recipients,
         C.vestingDistribution.amts
       );
-      await factory.deployAll(
+      const deployReceipt = await factory.deployAll(
         moloch.address,
         capTok.address,
         C.oneYear,
@@ -140,11 +142,42 @@ describe("Factory", () => {
       const tmut = new ethers.Contract(deployed.transmutation, Transmutation.abi, anyone);
       const trust = new ethers.Contract(deployed.trust, Trust.abi, anyone);
 
-      // check minion
+      // --- minion ---
       expect(await minion.moloch()).to.eq(moloch.address);
 
-      // check token
+      // --- token ---
+      expect(await hausTok.symbol()).to.eq(tokenSymbol);
+
+      // check initial supply minted correctly
       expect(await hausTok.totalSupply()).to.eq(utils.totalDist(dist));
+      expect(await hausTok.balanceOf(minion.address)).to.eq(dist.minionDist);
+      expect(await hausTok.balanceOf(tmut.address)).to.eq(dist.transmutationDist);
+      expect(await hausTok.balanceOf(trust.address)).to.eq(dist.trustDist);
+
+      // check ownership burned
+      expect(await hausTok.isMinter(factory.address)).to.be.false;
+
+      // --- transmutation ---
+      expect(await tmut.moloch()).to.eq(moloch.address);
+      expect(await tmut.giveToken()).to.eq(hausTok.address);
+      expect(await tmut.getToken()).to.eq(capTok.address);
+      expect(await hausTok.allowance(tmut.address, moloch.address)).to.eq(C.MaxUint256);
+      expect(await hausTok.allowance(tmut.address, minion.address)).to.eq(C.MaxUint256);
+
+      // --- Trust ---
+      expect(await trust.MOLOCH_GUILD_ADDR()).to.eq(await moloch.GUILD());
+      expect(await trust.moloch()).to.eq(moloch.address);
+      expect(await trust.molochCapitalToken()).to.eq(capTok.address);
+      expect(await trust.distributionToken()).to.eq(hausTok.address);
+      expect(await trust.unlocked()).to.be.false;
+
+      for (let i = 0; i < C.vestingDistribution.recipients.length; i++) {
+        expect(await trust.distributions(C.vestingDistribution.recipients[i]))
+          .to.eq(C.vestingDistribution.amts[i]);
+      }
+
+      const deployTime = (await provider.getBlock(deployReceipt.blockNumber)).timestamp;
+      expect(await trust.unlockTime()).to.eq(deployTime + C.oneYear);
     });
   })
 });

@@ -46,8 +46,8 @@ describe("Transmutation", () => {
   });
 
   beforeEach("deployContracts", async () => {
-    capTok = await factories.token.deploy("name", "CAP");
-    hausTok = await factories.token.deploy("name", "HAUS");
+    capTok = await factories.token.deploy("CAP");
+    hausTok = await factories.token.deploy("HAUS");
 
     moloch = await factories.moloch.deploy(
       _member,
