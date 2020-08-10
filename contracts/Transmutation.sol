@@ -31,8 +31,14 @@ contract Transmutation {
         getToken = _getToken;
         giveToken = _giveToken;
 
-        IERC20(giveToken).approve(_moloch, MAX_UINT);
-        IERC20(giveToken).approve(_owner, MAX_UINT);
+        require(
+            IERC20(giveToken).approve(_moloch, MAX_UINT),
+            "Transmutation::approval-failure"
+        );
+        require(
+            IERC20(giveToken).approve(_owner, MAX_UINT),
+            "Transmutation::approval-failure"
+        );
     }
 
     // any dao member can cancel

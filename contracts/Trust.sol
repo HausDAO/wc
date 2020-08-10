@@ -1,5 +1,4 @@
 pragma solidity ^0.5.11;
-// pragma experimental ABIEncoderV2;
 
 import "./interfaces/IMoloch.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
