@@ -159,6 +159,30 @@ describe("Knight's trust", () => {
       expect(await distTok.balanceOf(recip)).to.eq(bal0 + amt);
     });
 
+    it("works with repeats of the same recipient address", async () => {
+      const repeater = "0x1F9975C3A8Bcb23922c53e1ea6478F853029b138";
+      const repeatDist = {
+        "recipients": [
+          repeater,
+          "0xa01D6a90801201cA50266d02e8F88927dd2dA6a6",
+          repeater,
+          "0x75b84Df56ba7ca7E47320Daf7df2f17a1aA8ada8"
+        ],
+        amts: [ 1, 2, 3, 4 ]
+      }
+
+      const repeatTrust = await factories.trust.deploy(
+        moloch.address,
+        capTok.address,
+        distTok.address,
+        C.oneYear,
+        repeatDist.recipients,
+        repeatDist.amts
+      );
+
+      expect(await repeatTrust.distributions(repeater)).to.eq(4);
+    })
+
   });
 });
 
