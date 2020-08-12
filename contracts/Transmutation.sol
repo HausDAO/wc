@@ -46,6 +46,10 @@ contract Transmutation {
         require(_isMember(msg.sender), "Transmutation::not-member");
         emit Cancel(_proposalId, msg.sender);
         moloch.cancelProposal(_proposalId);
+        withdrawGiveToken();
+    }
+
+    function withdrawGiveToken() public {
         moloch.withdrawBalance(
             giveToken,
             moloch.userTokenBalances(address(this), giveToken)
