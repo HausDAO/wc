@@ -113,6 +113,9 @@ describe("Factory", () => {
       const event = (await provider.getLogs(filter))[0];
       const deployed = factory.interface.parseLog(event).args;
 
+      // check moloch event emitted correctly
+      expect(deployed.moloch).to.eq(moloch.address);
+
       // check deployed bytecode
       expect(await provider.getCode(deployed.distributionToken))
         .to.eq(Token.deployedBytecode);

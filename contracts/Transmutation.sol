@@ -16,6 +16,12 @@ contract Transmutation {
     address public giveToken;
     address public getToken;
 
+    event Deploy(
+        address moloch,
+        address giveToken,
+        address getToken,
+        address owner
+    );
     event Propose(uint256 proposalId, address sender);
     event Cancel(uint256 proposalId, address sender);
 
@@ -30,6 +36,8 @@ contract Transmutation {
         moloch = Moloch(_moloch);
         getToken = _getToken;
         giveToken = _giveToken;
+
+        emit Deploy(_moloch, _giveToken, _getToken, _owner);
 
         require(
             IERC20(giveToken).approve(_moloch, MAX_UINT),

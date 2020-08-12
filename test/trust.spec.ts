@@ -86,6 +86,17 @@ describe("Knight's trust", () => {
       expect(await trust.distributionToken()).to.eq(distTok.address);
       expect(await trust.unlocked()).to.be.false;
 
+      // check Deploy event emitted
+      const filter = trust.filters.Deploy();
+      const deployEvent = (await trust.queryFilter(
+        filter,
+        trust.deployTransaction.blockHash
+      ))[0];
+      expect(deployEvent.args!.moloch).to.eq(moloch.address);
+      expect(deployEvent.args!.distributionToken).to.eq(distTok.address);
+      expect(deployEvent.args!.vestingPeriod).to.eq(C.oneYear);
+      expect(deployEvent.args!.recipients).to.deep.eq(C.vestingDistribution.recipients);
+
       const dist = C.vestingDistribution
       for (let i = 0; i < dist.recipients.length; i++) {
         expect(await trust.distributions(dist.recipients[i])).to.eq(dist.amts[i]);

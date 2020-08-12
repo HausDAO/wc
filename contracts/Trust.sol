@@ -16,6 +16,12 @@ contract Trust {
     bool public unlocked;
     mapping (address => uint256) public distributions;
 
+    event Deploy(
+        address moloch,
+        address distributionToken,
+        uint256 vestingPeriod,
+        address[] recipients
+    );
     event Unlock(address unlocker);
     event Claim(address recipient, uint256 amt);
 
@@ -24,8 +30,8 @@ contract Trust {
         address _molochCapitalToken,
         address _distributionToken,
         uint256 _vestingPeriod,
-        address[] memory recipients,
-        uint256[] memory amts
+        address[] memory _recipients,
+        uint256[] memory _amts
     )
         public
     {
@@ -36,14 +42,16 @@ contract Trust {
         require(_vestingPeriod > 0, "Trust::invalid-vesting-period");
         unlockTime = SafeMath.add(block.timestamp, _vestingPeriod);
 
-        uint256 numDists = recipients.length;
-        require(amts.length == numDists, "Trust::invalid-distributions");
+        uint256 numDists = _recipients.length;
+        require(_amts.length == numDists, "Trust::invalid-distributions");
         for (uint256 i = 0; i < numDists; i++) {
-            distributions[recipients[i]] = SafeMath.add(
-                distributions[recipients[i]],
-                amts[i]
+            distributions[_recipients[i]] = SafeMath.add(
+                distributions[_recipients[i]],
+                _amts[i]
             );
         }
+
+        emit Deploy(_moloch, _distributionToken, _vestingPeriod, _recipients);
     }
 
     function unlock() external {

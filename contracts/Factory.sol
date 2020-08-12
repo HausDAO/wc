@@ -9,10 +9,11 @@ import "./Token.sol";
 contract Factory {
 
     event Deployment(
-        address distributionToken,
+        address moloch,
         address minion,
         address transmutation,
-        address trust
+        address trust,
+        address distributionToken
     );
 
     struct TokenDistribution {
@@ -61,10 +62,11 @@ contract Factory {
         );
 
         emit Deployment(
-            address(distributionToken),
+            _moloch,
             minion,
             transmutation,
-            trust
+            trust,
+            address(distributionToken)
         );
 
         // mint initial token distribution

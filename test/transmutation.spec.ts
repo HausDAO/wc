@@ -74,9 +74,22 @@ describe("Transmutation", () => {
 
   describe("constructor()", () => {
     it("deploys correctly", async () => {
+
       expect(await tmut.moloch()).to.eq(moloch.address);
       expect(await tmut.giveToken()).to.eq(hausTok.address);
       expect(await tmut.getToken()).to.eq(capTok.address);
+
+      // check Deploy event emitted
+      const filter = tmut.filters.Deploy();
+      const deployEvent = (await tmut.queryFilter(
+        filter,
+        tmut.deployTransaction.blockHash
+      ))[0];
+      expect(deployEvent.args!.moloch).to.eq(moloch.address);
+      expect(deployEvent.args!.giveToken).to.eq(hausTok.address);
+      expect(deployEvent.args!.getToken).to.eq(capTok.address);
+      expect(deployEvent.args!.getToken).to.eq(capTok.address);
+      expect(deployEvent.args!.owner).to.eq(owner);
 
       // check approvals
       expect(await hausTok.allowance(tmut.address, moloch.address)).to.eq(C.MaxUint256);
