@@ -40,14 +40,17 @@ function getFactory(artifact: any, signer?: ethers.Signer) {
   );
 }
 
-async function molochPassAndProcess(
+async function molochVoteandProcess(
   moloch: ethers.Contract,
-  propId: number
+  propId: number,
+  propType: "STANDARD" | "WHITELIST",
+  pass: boolean // true passes proposal, false fails it
 ) {
   const propIdx = await moloch.getProposalQueueLength();
   await moloch.sponsorProposal(propId);
   await bumpTime(1, C.molochConfig.PERIOD_DURATION_IN_SECONDS);
-  await moloch.submitVote(propIdx, 1);
+
+  await moloch.submitVote(propIdx, pass ? 1 : 2);
   await bumpTime(
     C.molochConfig.VOTING_DURATON_IN_PERIODS,
     C.molochConfig.PERIOD_DURATION_IN_SECONDS
@@ -56,7 +59,42 @@ async function molochPassAndProcess(
     C.molochConfig.GRACE_DURATON_IN_PERIODS,
     C.molochConfig.PERIOD_DURATION_IN_SECONDS
   );
-  await moloch.processProposal(propIdx);
+  if (propType == "STANDARD") {
+    return moloch.processProposal(propIdx);
+  }
+  if (propType == "WHITELIST") {
+    return moloch.processWhitelistProposal(propIdx);
+  }
+}
+
+function molochPassAndProcess(
+  moloch: ethers.Contract,
+  propId: number
+) {
+  return molochVoteandProcess(moloch, propId, "STANDARD", true);
+}
+
+function molochPassAndProcessWhitelist(
+  moloch: ethers.Contract,
+  propId: number
+) {
+  return molochVoteandProcess(moloch, propId, "WHITELIST", true);
+}
+
+function molochFailAndProcess(
+  moloch: ethers.Contract,
+  propId: number
+) {
+  return molochVoteandProcess(moloch, propId, "STANDARD", false);
+}
+
+async function molochWhitelistToken(
+  moloch: ethers.Contract,
+  token: string
+) {
+  await moloch.submitWhitelistProposal(token, "");
+  const propId = (await moloch.proposalCount()).sub(1);
+  return molochPassAndProcessWhitelist(moloch, propId);
 }
 
 async function getMolochGuildBalNonzero(moloch: ethers.Contract, holder: String, token: String) {
@@ -106,4 +144,7 @@ export default {
   bumpTime,
   totalDist,
   toTransmutationDetails,
+  molochPassAndProcess,
+  molochFailAndProcess,
+  molochWhitelistToken,
 }

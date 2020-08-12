@@ -26,12 +26,8 @@ describe("Factory", () => {
 
   let factories: FactoryFactories;
   let capTok: ethers.Contract;
-  let hausTok: ethers.Contract;
   let factory: ethers.Contract;
-  let tmut: ethers.Contract; // transmutation contract
-  let trust: ethers.Contract;
   let moloch: ethers.Contract;
-  let minion: ethers.Contract;
 
   before("get provider", () => {
     provider = new ethers.providers.Web3Provider(
@@ -102,15 +98,6 @@ describe("Factory", () => {
     });
 
     it("works", async () => {
-      /* await factory.deployAll( */
-      /*   moloch.address, */
-      /*   capTok.address, */
-      /*   C.oneYear, */
-      /*   "HAUS", */
-      /*   dist, */
-      /*   C.vestingDistribution.recipients, */
-      /*   C.vestingDistribution.amts */
-      /* ); */
       const deployReceipt = await factory.deployAll(
         moloch.address,
         capTok.address,
@@ -121,7 +108,7 @@ describe("Factory", () => {
         C.vestingDistribution.amts
       );
 
-      // check initialization vals of all contracts
+      // get Deployment event
       const filter = factory.filters.Deployment()
       const event = (await provider.getLogs(filter))[0];
       const deployed = factory.interface.parseLog(event).args;
@@ -178,10 +165,6 @@ describe("Factory", () => {
 
       const deployTime = (await provider.getBlock(deployReceipt.blockNumber)).timestamp;
       expect(await trust.unlockTime()).to.eq(deployTime + C.oneYear);
-
-      console.log("---------");
-      console.log('factory deployment gas limit:', factory.deployTransaction.gasLimit.toString());
-      console.log('system deployment gas limit:', deployReceipt.gasLimit.toString());
     });
   })
 });

@@ -127,15 +127,6 @@ describe("Transmutation", () => {
     it("reverts if caller isn't moloch member", async () => {
       await expect(tmut.cancel(0)).to.be.revertedWith(C.revertStrings.tmut.NOT_MEMBER);
     });
-    // TODO:
-    /* it("reverts if caller is jailed in the moloch", async () => { */
-    /*   const formerMember = provider.getSigner(2); */
-    /*   const _formerMember = await formerMember.getAddress(); */
-
-    /*   await utils.molochMakeMember(moloch, _formerMember); */
-    /*   await utils.molochGuildKick(moloch, _formerMember); */
-    /*   console.log('mem', await moloch.members(_member)); */
-    /* }); */
     it("cancels proposals", async () => {
       const giveAmt = 5;
       const getAmt = 10;
