@@ -3,9 +3,6 @@ import { ethers } from "ethers";
 
 import Confirm from "prompt-confirm";
 
-import Factory from "../artifacts/Factory.json";
-import Moloch from "../artifacts/Moloch.json";
-
 import { fixProvider, getFactory } from "./utils";
 
 import params from "../deploy_params";
@@ -14,6 +11,12 @@ task("deploy", "Deploys factory and uses factory.deployAll to deploy system")
   .addParam("mnemonic", "mnemonic to use for deployment")
   .setAction(async (args, bre) => {
     await bre.run("compile");
+
+
+    const factoryPath = "../artifacts/Factory.json";
+    const molochPath = "../artifacts/Moloch.json";
+    const Factory: any = await import(factoryPath);
+    const Moloch: any = await import(molochPath);
 
     const vestingDist = params.VESTING_DIST;
     check(
