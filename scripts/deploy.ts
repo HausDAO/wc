@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 
 import Confirm from "prompt-confirm";
 
-import { fixProvider, getFactory } from "./utils";
+import { fixProvider, getFactory, totalDist } from "./utils";
 
 import params from "../deploy_params";
 
@@ -29,6 +29,13 @@ task("deploy", "Deploys factory and uses factory.deployAll to deploy system")
       ["develop", "buidlerevm"].includes(bre.network.name) ===
       (params.MOLOCH_ADDRESS === "DEPLOY_FRESH"),
       "Please set MOLOCH_ADDRESS to DEPLOY_FRESH if and only if running on a local test network"
+    );
+
+    // total vesting distributions <= token distribution to trust
+    const totalVestingDists = params.VESTING_DIST.amts.reduce((a, b) => a + b);
+    check(
+      params.TOKEN_DIST.trustDist >= totalVestingDists,
+      "Trust contract will not have enough tokens to pay out recipients"
     );
 
     // --- Get provider and deployer wallet ---

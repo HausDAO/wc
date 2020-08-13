@@ -32,7 +32,12 @@ function getFactory(artifact: any, signer?: ethers.Signer) {
   );
 }
 
+function totalDist(dist: Record<string, number>) {
+  return Object.keys(dist).reduce((a:number, b:string) => a + dist[b], 0);
+}
+
 export {
   fixProvider,
-  getFactory
+  getFactory,
+  totalDist
 }
