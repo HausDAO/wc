@@ -141,11 +141,16 @@ describe("Transmutation", () => {
     it("reverts if caller isn't moloch member", async () => {
       await expect(tmut.cancel(0)).to.be.revertedWith(C.revertStrings.tmut.NOT_MEMBER);
     });
+
     it("cancels proposals", async () => {
       const giveAmt = 5;
       const getAmt = 10;
       const details = "the times 03/jan/2009";
       const bal0 = await hausTok.balanceOf(tmut.address);
+      const molochBal0 = await moloch.userTokenBalances(
+        tmut.address,
+        hausTok.address
+      );
       await tmut.connect(member).propose(applicant, giveAmt, getAmt, details);
 
       const propId = (await moloch.proposalCount()).sub(1);
@@ -156,8 +161,14 @@ describe("Transmutation", () => {
       expect(flags[3]).to.be.true;
 
       // check balances updated
-      expect(await hausTok.balanceOf(tmut.address)).to.eq(bal0);
-    })
+      expect(await moloch.userTokenBalances(tmut.address, hausTok.address))
+        .to.eq(molochBal0.add(giveAmt));
+
+      // check balance can be withdrawn
+      await tmut.withdrawGiveToken();
+      expect(await hausTok.balanceOf(tmut.address))
+        .to.eq(bal0.add(molochBal0));
+    });
   });
 
 });

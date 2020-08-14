@@ -74,7 +74,6 @@ contract Transmutation {
     function cancel(uint256 _proposalId) external memberOnly {
         emit Cancel(_proposalId, msg.sender);
         moloch.cancelProposal(_proposalId);
-        withdrawGiveToken();
     }
 
     function propose(
