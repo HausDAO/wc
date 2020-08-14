@@ -98,19 +98,20 @@ describe("Transmutation", () => {
   });
 
   describe("propose()", () => {
-    it("reverts if applicant == tmut.address", async () => {
-      await expect(tmut.propose(tmut.address, 10, 10, ""))
-        .to.be.revertedWith(C.revertStrings.tmut.APPLICANT);
-    });
     it("reverts if caller isn't moloch member", async () => {
       await expect(tmut.propose(applicant, 10, 10, ""))
         .to.be.revertedWith(C.revertStrings.tmut.NOT_MEMBER);
+    });
+    it("reverts if applicant == tmut.address", async () => {
+      await expect(tmut.connect(member).propose(tmut.address, 10, 10, ""))
+        .to.be.revertedWith(C.revertStrings.tmut.APPLICANT);
     });
     it("reverts if insufficient balance", async () => {
       await expect(
         tmut.connect(member).propose(applicant, 1000000000000, 10, "")
       ).to.be.revertedWith(C.revertStrings.token.BALANCE);
     });
+
     it("works", async () => {
       const giveAmt = 5;
       const getAmt = 10;

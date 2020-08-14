@@ -6,25 +6,35 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract Transmutation {
+
     using SafeMath for uint256;
 
+    // --- Constants ---
     uint256 constant MAX_UINT = 2**256 - 1;
     string public constant TRANSMUTATION_DETAILS = '{"isTransmutation": true, "title":"TRANSMUTATION", "description":"';
 
+    // --- State ---
     Moloch public moloch;
-
     address public giveToken;
     address public getToken;
 
+    // --- Events ---
+    event Propose(uint256 proposalId, address sender);
+    event Cancel(uint256 proposalId, address sender);
     event Deploy(
         address moloch,
         address giveToken,
         address getToken,
         address owner
     );
-    event Propose(uint256 proposalId, address sender);
-    event Cancel(uint256 proposalId, address sender);
 
+    // --- Modifiers ---
+    modifier memberOnly() {
+        require(_isMember(msg.sender), "Transmutation::not-member");
+        _;
+    }
+
+    // --- Constructor ---
     constructor(
         address _moloch,
         address _giveToken,
@@ -49,19 +59,22 @@ contract Transmutation {
         );
     }
 
-    // any dao member can cancel
-    function cancel(uint256 _proposalId) external {
-        require(_isMember(msg.sender), "Transmutation::not-member");
-        emit Cancel(_proposalId, msg.sender);
-        moloch.cancelProposal(_proposalId);
-        withdrawGiveToken();
-    }
+    // --- Public functions ---
 
     function withdrawGiveToken() public {
         moloch.withdrawBalance(
             giveToken,
             moloch.userTokenBalances(address(this), giveToken)
         );
+    }
+
+    // --- Member-only functions ---
+
+    // any dao member can cancel
+    function cancel(uint256 _proposalId) external memberOnly {
+        emit Cancel(_proposalId, msg.sender);
+        moloch.cancelProposal(_proposalId);
+        withdrawGiveToken();
     }
 
     function propose(
@@ -71,10 +84,10 @@ contract Transmutation {
         string calldata _details
     )
         external
+        memberOnly
         returns (uint256)
     {
         require(_applicant != address(this), "Transmutation::invalid-applicant");
-        require(_isMember(msg.sender), "Transmutation::not-member");
 
         string memory propDetails = string(abi.encodePacked(TRANSMUTATION_DETAILS, _details, '"}'));
 
@@ -92,6 +105,8 @@ contract Transmutation {
         emit Propose(proposalId, msg.sender);
         return proposalId;
     }
+
+    // --- View functions ---
 
     function _isMember(address usr) internal view returns (bool) {
         (, uint shares,,,,) = moloch.members(usr);
