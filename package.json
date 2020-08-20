@@ -2,6 +2,7 @@
   "name": "vester",
   "version": "1.0.0",
   "scripts": {
+    "clean": "npx buidler clean",
     "build": "npx buidler compile",
     "test": "npx buidler test"
   },
@@ -17,6 +18,7 @@
     "ethereum-waffle": "^3.0.2",
     "ethers": "^5.0.8",
     "prompt-confirm": "^2.0.4",
+    "truffle-flattener": "^1.4.4",
     "ts-node": "^8.10.2",
     "typescript": "^3.9.7"
   }

@@ -2,17 +2,19 @@ import { task } from "@nomiclabs/buidler/config";
 import { ethers } from "ethers";
 
 import Confirm from "prompt-confirm";
+import { DeployParams } from "./utils/types";
 
-import { fixProvider, getFactory, totalDist } from "./utils";
+import { fixProvider, getFactory, totalDist } from "./utils/utils";
 
 import params from "../deploy_params";
 
 task("deploy", "Deploys factory and uses factory.deployAll to deploy system")
   .addParam("mnemonic", "mnemonic to use for deployment")
   .setAction(async (args, bre) => {
+    /* await bre.run("compile-flat"); */
     await bre.run("compile");
 
-
+    /* const factoryPath = "../artifacts-flattened/Factory.json"; */
     const factoryPath = "../artifacts/Factory.json";
     const molochPath = "../artifacts/Moloch.json";
     const Factory: any = await import(factoryPath);

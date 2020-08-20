@@ -1,6 +1,8 @@
 import { BuidlerConfig, usePlugin } from "@nomiclabs/buidler/config";
 
 import "./scripts/deploy";
+import "./scripts/flatten";
+import "./scripts/compile-flat.ts";
 import params from "./deploy_params";
 
 const config: BuidlerConfig = {
@@ -20,7 +22,6 @@ const config: BuidlerConfig = {
       url: `https://kovan.infura.io/v3/${params.INFURA_API_KEY}`,
     }
   }
-
 };
 
 export default config;
