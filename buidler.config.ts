@@ -1,6 +1,7 @@
 import { BuidlerConfig, usePlugin } from "@nomiclabs/buidler/config";
 
 import "./scripts/deploy";
+import params from "./deploy_params";
 
 const config: BuidlerConfig = {
   defaultNetwork: "buidlerevm",
@@ -15,9 +16,8 @@ const config: BuidlerConfig = {
     develop: {
       url: "http://localhost:8545",
     },
-    // TODO
-    rinkeby: {
-      url: "http://localhost:8545",
+    kovan: {
+      url: `https://kovan.infura.io/v3/${params.INFURA_API_KEY}`,
     }
   }
 
