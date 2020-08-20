@@ -1,7 +1,6 @@
 pragma solidity ^0.5.11;
 
-import "./Minion.sol";
-import "./moloch/Moloch.sol";
+import "./interfaces/IMoloch.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -14,7 +13,7 @@ contract Transmutation {
     string public constant TRANSMUTATION_DETAILS = '{"isTransmutation": true, "title":"TRANSMUTATION", "description":"';
 
     // --- State ---
-    Moloch public moloch;
+    IMoloch public moloch;
     address public giveToken;
     address public getToken;
 
@@ -43,7 +42,7 @@ contract Transmutation {
     )
         public
     {
-        moloch = Moloch(_moloch);
+        moloch = IMoloch(_moloch);
         getToken = _getToken;
         giveToken = _giveToken;
 
