@@ -29,7 +29,7 @@ contract Transmutation {
 
     // --- Modifiers ---
     modifier memberOnly() {
-        require(_isMember(msg.sender), "Transmutation::not-member");
+        require(isMember(msg.sender), "Transmutation::not-member");
         _;
     }
 
@@ -105,8 +105,7 @@ contract Transmutation {
     }
 
     // --- View functions ---
-
-    function _isMember(address usr) internal view returns (bool) {
+    function isMember(address usr) public view returns (bool) {
         (, uint shares,,,,) = moloch.members(usr);
         return shares > 0;
     }
