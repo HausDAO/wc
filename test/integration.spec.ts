@@ -24,6 +24,7 @@ describe("All together now", () => {
   let deployer: ethers.Signer;
   let member: ethers.Signer;
   let anyone: ethers.Signer;
+  let _deployer: String;
   let _member: String;
 
   let factories: FactoryFactories;
@@ -42,6 +43,7 @@ describe("All together now", () => {
     deployer = provider.getSigner(0);
     member = provider.getSigner(1);
     anyone = provider.getSigner(1);
+    _deployer = await deployer.getAddress();
     _member = await member.getAddress();
 
     factories = {
@@ -53,6 +55,7 @@ describe("All together now", () => {
 
   beforeEach("deploy system", async () => {
     capTok = await factories.token.deploy("CAP");
+    hausTok = await factories.token.deploy("HAUS");
     moloch = await factories.moloch.deploy(
       _member,
       [ capTok.address ],
@@ -77,11 +80,14 @@ describe("All together now", () => {
       minionDist: 850000
     };
 
+    await hausTok.mint(_deployer, utils.totalDist(dist));
+    await hausTok.approve(factory.address, utils.totalDist(dist));
+
     const deployReceipt = await factory.deployAll(
       moloch.address,
       capTok.address,
+      hausTok.address,
       C.oneYear,
-      "HAUS",
       dist,
       C.vestingDistribution.recipients,
       C.vestingDistribution.amts
@@ -92,7 +98,6 @@ describe("All together now", () => {
     const event = (await provider.getLogs(filter))[0];
     const deployed = factory.interface.parseLog(event).args;
 
-    hausTok = new ethers.Contract(deployed.distributionToken, Token.abi, anyone);
     minion = new ethers.Contract(deployed.minion, Minion.abi, anyone);
     tmut = new ethers.Contract(deployed.transmutation, Transmutation.abi, anyone);
     trust = new ethers.Contract(deployed.trust, Trust.abi, anyone);

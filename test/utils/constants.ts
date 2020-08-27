@@ -40,10 +40,13 @@ const revertStrings = {
     BALANCE: "Transmutation::insufficient-balance"
   },
   factory: {
-    BAD_DISTRIBUTION: "Factory::invalid-vesting-dist"
+    BAD_VESTING_DIST: "Factory::invalid-vesting-dist",
+    BAD_TOKEN_DIST: "Factory::invalid-token-dist",
+    FAILED_DIST: "Factory::failed-distribution"
   },
   token: {
-    BALANCE: "ERC20: transfer amount exceeds balance"
+    BALANCE: "ERC20: transfer amount exceeds balance",
+    ALLOWANCE: "ERC20: transfer amount exceeds allowance"
   }
 }
 

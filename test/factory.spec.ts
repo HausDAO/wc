@@ -23,18 +23,21 @@ describe("Factory", () => {
   let provider: ethers.providers.JsonRpcProvider;
   let deployer: ethers.Signer;
   let anyone: ethers.Signer;
+  let _deployer: string;
 
   let factories: FactoryFactories;
   let capTok: ethers.Contract;
+  let distTok: ethers.Contract;
   let factory: ethers.Contract;
   let moloch: ethers.Contract;
 
-  before("get provider", () => {
+  before("get provider", async () => {
     provider = new ethers.providers.Web3Provider(
       utils.fixProvider(network.provider as any)
     );
     deployer = provider.getSigner(0);
     anyone = provider.getSigner(1);
+    _deployer = await deployer.getAddress();
 
     factories = {
       factory: utils.getFactory(Factory, deployer),
@@ -45,6 +48,7 @@ describe("Factory", () => {
 
   beforeEach("deploy contracts", async () => {
     capTok = await factories.token.deploy("CAP");
+    distTok = await factories.token.deploy("DIST");
     moloch = await factories.moloch.deploy(
       C.AddressOne,
       [ capTok.address ],
@@ -68,41 +72,59 @@ describe("Factory", () => {
       trustDist: 5
     };
 
-    const tokenSymbol = "HAUS";
-
     it("reverts if vesting distribution lengths don't match", async () => {
+      // len(recipients) > len(amts)
       await expect(
         factory.deployAll(
           moloch.address,
           capTok.address,
+          distTok.address,
           C.oneYear,
-          tokenSymbol,
           dist,
           C.vestingDistribution.recipients,
           C.vestingDistribution.amts.slice(1)
         )
-      ).to.be.revertedWith(C.revertStrings.factory.BAD_DISTRIBUTION);
+      ).to.be.revertedWith(C.revertStrings.factory.BAD_VESTING_DIST);
+
+      // len(amts) > len(recipients)
+      await expect(
+        factory.deployAll(
+          moloch.address,
+          capTok.address,
+          distTok.address,
+          C.oneYear,
+          dist,
+          C.vestingDistribution.recipients.slice(1),
+          C.vestingDistribution.amts
+        )
+      ).to.be.revertedWith(C.revertStrings.factory.BAD_VESTING_DIST);
+    });
+
+    it("reverts if too few dist tokens held by caller", async () => {
+      await distTok.mint(_deployer, utils.totalDist(dist) - 1);
 
       await expect(
         factory.deployAll(
           moloch.address,
           capTok.address,
+          distTok.address,
           C.oneYear,
-          "HAUS",
           dist,
-          C.vestingDistribution.recipients.slice(1),
+          C.vestingDistribution.recipients,
           C.vestingDistribution.amts
         )
-      ).to.be.revertedWith(C.revertStrings.factory.BAD_DISTRIBUTION);
-
+      ).to.be.revertedWith(C.revertStrings.token.ALLOWANCE);
     });
 
     it("works", async () => {
+      await distTok.mint(_deployer, utils.totalDist(dist));
+      await distTok.approve(factory.address, utils.totalDist(dist));
+
       const deployReceipt = await factory.deployAll(
         moloch.address,
         capTok.address,
+        distTok.address,
         C.oneYear,
-        "HAUS",
         dist,
         C.vestingDistribution.recipients,
         C.vestingDistribution.amts
@@ -113,12 +135,11 @@ describe("Factory", () => {
       const event = (await provider.getLogs(filter))[0];
       const deployed = factory.interface.parseLog(event).args;
 
-      // check moloch event emitted correctly
+      // check provided event parameters emitted correctly
       expect(deployed.moloch).to.eq(moloch.address);
+      expect(deployed.distributionToken).to.eq(distTok.address);
 
       // check deployed bytecode
-      expect(await provider.getCode(deployed.distributionToken))
-        .to.eq(Token.deployedBytecode);
       expect(await provider.getCode(deployed.minion))
         .to.eq(Minion.deployedBytecode);
       expect(await provider.getCode(deployed.transmutation))
@@ -127,7 +148,6 @@ describe("Factory", () => {
         .to.eq(Trust.deployedBytecode);
 
       // get deployed contracts
-      const hausTok = new ethers.Contract(deployed.distributionToken, Token.abi, anyone);
       const minion = new ethers.Contract(deployed.minion, Minion.abi, anyone);
       const tmut = new ethers.Contract(deployed.transmutation, Transmutation.abi, anyone);
       const trust = new ethers.Contract(deployed.trust, Trust.abi, anyone);
@@ -135,30 +155,25 @@ describe("Factory", () => {
       // --- minion ---
       expect(await minion.moloch()).to.eq(moloch.address);
 
-      // --- token ---
-      expect(await hausTok.symbol()).to.eq(tokenSymbol);
-
-      // check initial supply minted correctly
-      expect(await hausTok.totalSupply()).to.eq(utils.totalDist(dist));
-      expect(await hausTok.balanceOf(minion.address)).to.eq(dist.minionDist);
-      expect(await hausTok.balanceOf(tmut.address)).to.eq(dist.transmutationDist);
-      expect(await hausTok.balanceOf(trust.address)).to.eq(dist.trustDist);
-
-      // check ownership burned
-      expect(await hausTok.isMinter(factory.address)).to.be.false;
+      // check initial supply distributed correctly
+      expect(await distTok.balanceOf(factory.address)).to.eq(0);
+      expect(await distTok.balanceOf(_deployer)).to.eq(0);
+      expect(await distTok.balanceOf(minion.address)).to.eq(dist.minionDist);
+      expect(await distTok.balanceOf(tmut.address)).to.eq(dist.transmutationDist);
+      expect(await distTok.balanceOf(trust.address)).to.eq(dist.trustDist);
 
       // --- transmutation ---
       expect(await tmut.moloch()).to.eq(moloch.address);
-      expect(await tmut.giveToken()).to.eq(hausTok.address);
+      expect(await tmut.giveToken()).to.eq(distTok.address);
       expect(await tmut.getToken()).to.eq(capTok.address);
-      expect(await hausTok.allowance(tmut.address, moloch.address)).to.eq(C.MaxUint256);
-      expect(await hausTok.allowance(tmut.address, minion.address)).to.eq(C.MaxUint256);
+      expect(await distTok.allowance(tmut.address, moloch.address)).to.eq(C.MaxUint256);
+      expect(await distTok.allowance(tmut.address, minion.address)).to.eq(C.MaxUint256);
 
       // --- Trust ---
       expect(await trust.MOLOCH_GUILD_ADDR()).to.eq(await moloch.GUILD());
       expect(await trust.moloch()).to.eq(moloch.address);
       expect(await trust.molochCapitalToken()).to.eq(capTok.address);
-      expect(await trust.distributionToken()).to.eq(hausTok.address);
+      expect(await trust.distributionToken()).to.eq(distTok.address);
       expect(await trust.unlocked()).to.be.false;
 
       for (let i = 0; i < C.vestingDistribution.recipients.length; i++) {
