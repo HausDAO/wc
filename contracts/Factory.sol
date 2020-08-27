@@ -1,19 +1,20 @@
 pragma solidity 0.5.11;
 pragma experimental ABIEncoderV2;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 import "./Minion.sol";
 import "./Transmutation.sol";
 import "./Trust.sol";
-import "./Token.sol";
 
 contract Factory {
 
     event Deployment(
         address moloch,
+        address distributionToken,
         address minion,
         address transmutation,
-        address trust,
-        address distributionToken
+        address trust
     );
 
     struct TokenDistribution {
@@ -25,8 +26,8 @@ contract Factory {
     function deployAll(
         address _moloch,
         address _capitalToken,
+        address _distributionToken,
         uint256 _vestingPeriod,
-        string calldata _tokenSymbol,
         TokenDistribution calldata _dist,
         address[] calldata _vestingDistRecipients,
         uint256[] calldata _vestingDistAmts
@@ -38,13 +39,11 @@ contract Factory {
             "Factory::invalid-vesting-dist"
         );
 
-        Token distributionToken = new Token(_tokenSymbol);
-
         address minion = address(new Minion(_moloch));
         address transmutation = address(
                 new Transmutation(
                 _moloch,
-                address(distributionToken),
+                _distributionToken,
                 _capitalToken,
                 minion
             )
@@ -54,7 +53,7 @@ contract Factory {
             new Trust(
                 _moloch,
                 _capitalToken,
-                address(distributionToken),
+                _distributionToken,
                 _vestingPeriod,
                 _vestingDistRecipients,
                 _vestingDistAmts
@@ -63,19 +62,28 @@ contract Factory {
 
         emit Deployment(
             _moloch,
+            _distributionToken,
             minion,
             transmutation,
-            trust,
-            address(distributionToken)
+            trust
         );
 
-        // mint initial token distribution
-        distributionToken.mint(minion, _dist.minionDist);
-        distributionToken.mint(trust, _dist.trustDist);
-        distributionToken.mint(transmutation, _dist.transmutationDist);
-
-        // leave token un-mintable
-        distributionToken.renounceMinter();
+        // transfer initial token distribution
+        IERC20(_distributionToken).transferFrom(
+            msg.sender,
+            minion,
+            _dist.minionDist
+        );
+        IERC20(_distributionToken).transferFrom(
+            msg.sender,
+            trust,
+            _dist.trustDist
+        );
+        IERC20(_distributionToken).transferFrom(
+            msg.sender,
+            transmutation,
+            _dist.transmutationDist
+        );
     }
 
 }
