@@ -5,9 +5,9 @@ const ETHERSCAN_API_KEY = "";
 
 const MOLOCH_ADDRESS = "DEPLOY_FRESH"; // for local test net deployments
 // const MOLOCH_ADDRESS = "0x501f352e32ec0c981268dc5b5ba1d3661b1acbc6"; // kovan moloch
+const DIST_TOKEN_ADDRESS = "0x3202Fe1B3A4a0B79bdE96Ae9670b613f5f50cBe7";
 const CAP_TOKEN_ADDRESS = "0xd0a1e359811322d97991e03f863a0c30c2cf029c"; // kovan weth
 const VESTING_PERIOD = oneYear;
-const HAUS_TOKEN_SYMBOL = "SYM";
 const TOKEN_DIST = {
   transmutationDist: 100000,
   trustDist: 50000,
