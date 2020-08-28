@@ -8,6 +8,62 @@ import { fixProvider, getFactory, totalDist } from "./utils/utils";
 
 import params from "../deploy_params";
 
+task("deployToken", "Deploys a token and mints sum(TOKEN_DIST) to deployrer")
+  .addParam("mnemonic", "mnemonic to use for deployment")
+  .addParam("symbol", "Symbol to deploy the token with")
+  .setAction(async (args, bre) => {
+    await bre.run("compile");
+
+    const tokenPath = "../artifacts/Token.json";
+    const Token: any = await import(tokenPath);
+
+    // --- Get provider and deployer wallet ---
+    const provider = new ethers.providers.Web3Provider(
+      fixProvider(bre.network.provider)
+    );
+    const unconnectedWallet = ethers.Wallet.fromMnemonic(args.mnemonic, "m/44'/60'/0'/0/0");
+    const wallet = await unconnectedWallet.connect(provider);
+
+    // --- Deploy token ---
+
+    console.log("-----------------");
+    console.log(
+      `Deploying Token to ${bre.network.name} from ${wallet.address}\n`,
+       `Wallet balance:`,
+       ethers.utils.formatEther(await provider.getBalance(wallet.address)),
+       `ether\n`
+    );
+
+    // confirm deployment
+    const confirmationPrompt = new Confirm("Continue?")
+    const confirmTokenDeploy = await confirmationPrompt.run();
+    if (!confirmTokenDeploy) {
+      console.log("Token deployment aborted");
+      return
+    }
+
+    const tokenFactory = getFactory(Token, wallet);
+    const token = await tokenFactory.deploy(args.symbol);
+
+    const tokenDeployTx = await provider.getTransactionReceipt(
+      token.deployTransaction.hash
+    );
+
+    console.log('\ntoken deployment gas used:', tokenDeployTx.gasUsed.toString());
+    console.log('token address:', token.address);
+    console.log("-----------------");
+
+    const totalMint = totalDist(params.TOKEN_DIST);
+    console.log('minting token distributions');
+    console.log(params.TOKEN_DIST);
+    console.log('total tokens to mint:', totalMint);
+    await token.mint(wallet.address, totalMint);
+
+    console.log('burning Minter Role');
+    await token.renounceMinter();
+    console.log("minter burned")
+  });
+
 task("deploy", "Deploys factory and uses factory.deployAll to deploy system")
   .addParam("mnemonic", "mnemonic to use for deployment")
   .setAction(async (args, bre) => {
