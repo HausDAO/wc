@@ -72,8 +72,10 @@ task("deploy", "Deploys factory and uses factory.deployAll to deploy system")
 
     /* const factoryPath = "../artifacts-flattened/Factory.json"; */
     const factoryPath = "../artifacts/Factory.json";
+    const tokenPath = "../artifacts/Token.json";
     const molochPath = "../artifacts/Moloch.json";
     const Factory: any = await import(factoryPath);
+    const Token: any = await import(tokenPath);
     const Moloch: any = await import(molochPath);
 
     const vestingDist = params.VESTING_DIST;
@@ -121,7 +123,6 @@ task("deploy", "Deploys factory and uses factory.deployAll to deploy system")
       return
     }
 
-
     const factoryFactory = getFactory(Factory, wallet);
     const factory = await factoryFactory.deploy();
 
@@ -163,6 +164,28 @@ task("deploy", "Deploys factory and uses factory.deployAll to deploy system")
     }
 
     console.log("-----------------");
+    console.log("Verifying distribution token parameters");
+    const distToken = new ethers.Contract(
+      params.DIST_TOKEN_ADDRESS,
+      Token.abi,
+      wallet
+    );
+    const sumDists = totalDist(params.TOKEN_DIST);
+    check(
+      await distToken.balanceOf(wallet.address) >= (sumDists),
+      "Deployer does not have enough tokens for distributions"
+    );
+    console.log(`Approving factory to transfer ${sumDists} tokens from ${wallet.address}`);
+    // confirm approval
+    const confirmApproval = await confirmationPrompt.run();
+    if (!confirmApproval) {
+      console.log("Token approvals aborted");
+      return
+    }
+    await distToken.approve(factory.address, sumDists);
+
+
+    console.log("-----------------");
     console.log(
       `Deploying WC system to ${bre.network.name} from ${wallet.address}\n`,
       "Wallet balance:",
@@ -170,8 +193,8 @@ task("deploy", "Deploys factory and uses factory.deployAll to deploy system")
       "ether",
       "\n\nParameters:\n",
       `Moloch address: ${params.MOLOCH_ADDRESS}\n`,
+      `Distribution token address: ${params.DIST_TOKEN_ADDRESS}\n`,
       `Capital token address: ${params.CAP_TOKEN_ADDRESS}\n`,
-      `Distribution token symbol: ${params.HAUS_TOKEN_SYMBOL}\n`,
       `Initial token distributions:\n`,
       `   Minion: ${params.TOKEN_DIST.minionDist}\n`,
       `   Transmutation: ${params.TOKEN_DIST.transmutationDist}\n`,
@@ -197,12 +220,12 @@ task("deploy", "Deploys factory and uses factory.deployAll to deploy system")
     const deployReceipt = await factory.deployAll(
       params.MOLOCH_ADDRESS,
       params.CAP_TOKEN_ADDRESS,
+      params.DIST_TOKEN_ADDRESS,
       params.VESTING_PERIOD,
-      params.HAUS_TOKEN_SYMBOL,
       params.TOKEN_DIST,
       params.VESTING_DIST.recipients,
       params.VESTING_DIST.amts,
-    )
+    );
 
     const sysDeployTx = await provider.getTransactionReceipt(deployReceipt.hash);
     console.log('\nsystem deployment gas used:', sysDeployTx.gasUsed.toString());
