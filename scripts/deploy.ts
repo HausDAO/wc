@@ -12,9 +12,9 @@ task("deployToken", "Deploys a token and mints sum(TOKEN_DIST) to deployrer")
   .addParam("mnemonic", "mnemonic to use for deployment")
   .addParam("symbol", "Symbol to deploy the token with")
   .setAction(async (args, bre) => {
-    await bre.run("compile");
+    await bre.run("compile-flat");
 
-    const tokenPath = "../artifacts/Token.json";
+    const tokenPath = "../artifacts-flattened/Token.json";
     const Token: any = await import(tokenPath);
 
     // --- Get provider and deployer wallet ---
@@ -67,13 +67,11 @@ task("deployToken", "Deploys a token and mints sum(TOKEN_DIST) to deployrer")
 task("deploy", "Deploys factory and uses factory.deployAll to deploy system")
   .addParam("mnemonic", "mnemonic to use for deployment")
   .setAction(async (args, bre) => {
-    /* await bre.run("compile-flat"); */
-    await bre.run("compile");
+    await bre.run("compile-flat");
 
-    /* const factoryPath = "../artifacts-flattened/Factory.json"; */
-    const factoryPath = "../artifacts/Factory.json";
-    const tokenPath = "../artifacts/Token.json";
-    const molochPath = "../artifacts/Moloch.json";
+    const factoryPath = "../artifacts-flattened/Factory.json";
+    const tokenPath = "../artifacts-flattened/Token.json";
+    const molochPath = "../artifacts-flattened/Moloch.json";
     const Factory: any = await import(factoryPath);
     const Token: any = await import(tokenPath);
     const Moloch: any = await import(molochPath);
@@ -222,7 +220,9 @@ task("deploy", "Deploys factory and uses factory.deployAll to deploy system")
       params.CAP_TOKEN_ADDRESS,
       params.DIST_TOKEN_ADDRESS,
       params.VESTING_PERIOD,
-      params.TOKEN_DIST,
+      params.TOKEN_DIST.transmutationDist,
+      params.TOKEN_DIST.trustDist,
+      params.TOKEN_DIST.minionDist,
       params.VESTING_DIST.recipients,
       params.VESTING_DIST.amts,
     );
