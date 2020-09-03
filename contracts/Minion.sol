@@ -1,6 +1,6 @@
 pragma solidity 0.5.11;
 
-import "./moloch/Moloch.sol";
+import "./interfaces/IMoloch.sol";
 
 contract Minion {
 
@@ -8,7 +8,7 @@ contract Minion {
     string public constant MINION_ACTION_DETAILS = '{"isMinion": true, "title":"MINION", "description":"';
 
     // --- State and data structures ---
-    Moloch public moloch;
+    IMoloch public moloch;
     address public molochApprovedToken;
     mapping (uint256 => Action) public actions; // proposalId => Action
 
@@ -33,7 +33,7 @@ contract Minion {
 
     // --- Constructor ---
     constructor(address _moloch) public {
-        moloch = Moloch(_moloch);
+        moloch = IMoloch(_moloch);
         molochApprovedToken = moloch.depositToken();
     }
 
