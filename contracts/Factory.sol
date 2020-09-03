@@ -1,5 +1,4 @@
 pragma solidity 0.5.11;
-pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -17,18 +16,14 @@ contract Factory {
         address trust
     );
 
-    struct TokenDistribution {
-        uint256 transmutationDist;
-        uint256 trustDist;
-        uint256 minionDist;
-    }
-
     function deployAll(
         address _moloch,
         address _capitalToken,
         address _distributionToken,
         uint256 _vestingPeriod,
-        TokenDistribution calldata _dist,
+        uint256 _transmutationDist,
+        uint256 _trustDist,
+        uint256 _minionDist,
         address[] calldata _vestingDistRecipients,
         uint256[] calldata _vestingDistAmts
     )
@@ -72,17 +67,17 @@ contract Factory {
         IERC20(_distributionToken).transferFrom(
             msg.sender,
             minion,
-            _dist.minionDist
+            _minionDist
         );
         IERC20(_distributionToken).transferFrom(
             msg.sender,
             trust,
-            _dist.trustDist
+            _trustDist
         );
         IERC20(_distributionToken).transferFrom(
             msg.sender,
             transmutation,
-            _dist.transmutationDist
+            _transmutationDist
         );
     }
 

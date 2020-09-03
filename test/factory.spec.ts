@@ -67,9 +67,9 @@ describe("Factory", () => {
   describe("deployAll()", () => {
 
     const dist = {
-      minionDist: 100,
       transmutationDist: 10,
-      trustDist: 5
+      trustDist: 5,
+      minionDist: 100
     };
 
     it("reverts if vesting distribution lengths don't match", async () => {
@@ -80,7 +80,9 @@ describe("Factory", () => {
           capTok.address,
           distTok.address,
           C.oneYear,
-          dist,
+          dist.transmutationDist,
+          dist.trustDist,
+          dist.minionDist,
           C.vestingDistribution.recipients,
           C.vestingDistribution.amts.slice(1)
         )
@@ -93,7 +95,9 @@ describe("Factory", () => {
           capTok.address,
           distTok.address,
           C.oneYear,
-          dist,
+          dist.transmutationDist,
+          dist.trustDist,
+          dist.minionDist,
           C.vestingDistribution.recipients.slice(1),
           C.vestingDistribution.amts
         )
@@ -109,7 +113,9 @@ describe("Factory", () => {
           capTok.address,
           distTok.address,
           C.oneYear,
-          dist,
+          dist.transmutationDist,
+          dist.trustDist,
+          dist.minionDist,
           C.vestingDistribution.recipients,
           C.vestingDistribution.amts
         )
@@ -125,7 +131,9 @@ describe("Factory", () => {
         capTok.address,
         distTok.address,
         C.oneYear,
-        dist,
+        dist.transmutationDist,
+        dist.trustDist,
+        dist.minionDist,
         C.vestingDistribution.recipients,
         C.vestingDistribution.amts
       );
