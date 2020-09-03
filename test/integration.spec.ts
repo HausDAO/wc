@@ -54,8 +54,8 @@ describe("All together now", () => {
   });
 
   beforeEach("deploy system", async () => {
-    capTok = await factories.token.deploy("CAP");
-    hausTok = await factories.token.deploy("HAUS");
+    capTok = await factories.token.deploy("NAME-CAP", "CAP");
+    hausTok = await factories.token.deploy("NAME-HAUS", "HAUS");
     moloch = await factories.moloch.deploy(
       _member,
       [ capTok.address ],
@@ -88,7 +88,9 @@ describe("All together now", () => {
       capTok.address,
       hausTok.address,
       C.oneYear,
-      dist,
+      dist.transmutationDist,
+      dist.trustDist,
+      dist.minionDist,
       C.vestingDistribution.recipients,
       C.vestingDistribution.amts
     );

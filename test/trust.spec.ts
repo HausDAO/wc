@@ -43,8 +43,8 @@ describe("Knight's trust", () => {
   });
 
   beforeEach("deploy contracts", async () => {
-    capTok = await factories.token.deploy("CAP");
-    distTok = await factories.token.deploy("DIST");
+    capTok = await factories.token.deploy("CAP-NAME", "CAP");
+    distTok = await factories.token.deploy("DIST-NAME", "DIST");
 
     moloch = await factories.moloch.deploy(
       _owner,

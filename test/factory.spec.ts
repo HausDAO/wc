@@ -47,8 +47,8 @@ describe("Factory", () => {
   });
 
   beforeEach("deploy contracts", async () => {
-    capTok = await factories.token.deploy("CAP");
-    distTok = await factories.token.deploy("DIST");
+    capTok = await factories.token.deploy("CAP-NAME", "CAP");
+    distTok = await factories.token.deploy("DIST-NAME", "DIST");
     moloch = await factories.moloch.deploy(
       C.AddressOne,
       [ capTok.address ],
@@ -61,6 +61,15 @@ describe("Factory", () => {
     );
 
     factory = await factories.factory.deploy();
+  });
+
+  describe("token", async () => {
+    it("sets name and symbol", async () => {
+      expect(await distTok.name()).to.eq("DIST-NAME")
+      expect(await distTok.symbol()).to.eq("DIST")
+      expect(await capTok.name()).to.eq("CAP-NAME")
+      expect(await capTok.symbol()).to.eq("CAP")
+    });
   });
 
   // TODO: reverts of individual deployments

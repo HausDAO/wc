@@ -10,6 +10,7 @@ import params from "../deploy_params";
 
 task("deployToken", "Deploys a token and mints sum(TOKEN_DIST) to deployrer")
   .addParam("mnemonic", "mnemonic to use for deployment")
+  .addParam("name", "Name for the token to be deployed with")
   .addParam("symbol", "Symbol to deploy the token with")
   .setAction(async (args, bre) => {
     await bre.run("compile-flat");
@@ -43,7 +44,7 @@ task("deployToken", "Deploys a token and mints sum(TOKEN_DIST) to deployrer")
     }
 
     const tokenFactory = getFactory(Token, wallet);
-    const token = await tokenFactory.deploy(args.symbol);
+    const token = await tokenFactory.deploy(args.name, args.symbol);
 
     const tokenDeployTx = await provider.getTransactionReceipt(
       token.deployTransaction.hash
