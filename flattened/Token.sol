@@ -675,8 +675,9 @@ pragma solidity 0.5.11;
 contract Token is ERC20Detailed, ERC20Mintable {
 
     constructor(
+        string memory name,
         string memory symbol
     )
         public
-        ERC20Detailed("", symbol, 18) {}
+        ERC20Detailed(name, symbol, 18) {}
 }

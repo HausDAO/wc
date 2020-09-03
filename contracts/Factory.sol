@@ -16,6 +16,19 @@ contract Factory {
         address trust
     );
 
+    /**
+     * @dev Deploy Minion, Trust, and Transmutation and transfer initial token
+     * distributions from caller to deployed contracts
+     * @param _moloch Address of the molochDao referred to by deployed contracts
+     * @param _capitalToken Address of the dao's capitalToken
+     * @param _distributionToken Address of the dao's distribution token
+     * @param _vestingPeriod Vesting period of the deployed Trust
+     * @param _transmutationDist Amt of distribution token to give Transmutation
+     * @param _trustDist Amt of distribution token to give Trust
+     * @param _minionDist Amt of distribution token to give Minion
+     * @param _vestingDistRecipients Recipients to pass to Trust
+     * @param _vestingDistAmts Amts to pass to Trust
+     */
     function deployAll(
         address _moloch,
         address _capitalToken,
@@ -29,11 +42,13 @@ contract Factory {
     )
         external
     {
+        // sanity check
         require(
             _vestingDistRecipients.length == _vestingDistAmts.length,
             "Factory::invalid-vesting-dist"
         );
 
+        // deploy contracts
         address minion = address(new Minion(_moloch));
         address transmutation = address(
                 new Transmutation(
@@ -43,7 +58,6 @@ contract Factory {
                 minion
             )
         );
-
         address trust = address(
             new Trust(
                 _moloch,
