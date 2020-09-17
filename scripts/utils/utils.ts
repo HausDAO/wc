@@ -1,4 +1,4 @@
-import { ethers } from "ethers";
+import { ethers, BigNumber } from "ethers";
 
 // from wighawag/buidler-ethers-v5
 function fixProvider(provider: any): any {
@@ -32,12 +32,19 @@ function getFactory(artifact: any, signer?: ethers.Signer) {
   );
 }
 
-function totalDist(dist: Record<string, number>) {
-  return Object.keys(dist).reduce((a:number, b:string) => a + dist[b], 0);
+function totalDist(dist: Record<string, ethers.BigNumberish>) {
+  return Object.keys(dist).reduce((a:ethers.BigNumber, b:string) =>
+    a.add(ethers.BigNumber.from(dist[b])), ethers.BigNumber.from("0")
+  );
+}
+
+function strToEth(val: ethers.BigNumberish) {
+  return ethers.utils.formatEther(ethers.BigNumber.from(val));
 }
 
 export {
   fixProvider,
   getFactory,
-  totalDist
+  totalDist,
+  strToEth
 }

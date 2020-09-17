@@ -4,7 +4,7 @@ import { ethers } from "ethers";
 import Confirm from "prompt-confirm";
 import { DeployParams } from "./utils/types";
 
-import { fixProvider, getFactory, totalDist } from "./utils/utils";
+import { fixProvider, getFactory, totalDist, strToEth } from "./utils/utils";
 
 import params from "../deploy_params";
 
@@ -35,6 +35,26 @@ task("deployToken", "Deploys a token and mints sum(TOKEN_DIST) to deployrer")
        `ether\n`
     );
 
+    // const gasPrice = ethers.BigNumber.from('2000000000'); // 2 gwei
+    // const gasPrice = ethers.BigNumber.from('200000000000'); // 200 gwei
+    const gasPrice = ethers.BigNumber.from('300000000000'); // 285 gwei
+    const providerGasPrice = await provider.getGasPrice();
+    const gasEstimate = 1040000;
+    console.log(
+      `provider gas price: ${ethers.utils.formatUnits(providerGasPrice, 'gwei')} gwei`,
+      `\nusing gas price: ${ethers.utils.formatUnits(gasPrice, 'gwei')} gwei`,
+      `\n`
+    );
+
+    const totalMint = totalDist(params.TOKEN_DIST);
+    console.log('token distributions');
+    console.log(
+      `   transmutation: ${strToEth(params.TOKEN_DIST.transmutationDist)}`,
+      `\n   trustDist:     ${strToEth(params.TOKEN_DIST.trustDist)}`,
+      `\n   minionDist:    ${strToEth(params.TOKEN_DIST.minionDist)}`,
+      `\n   total:         ${strToEth(totalMint)}`
+    );
+
     // confirm deployment
     const confirmationPrompt = new Confirm("Continue?")
     const confirmTokenDeploy = await confirmationPrompt.run();
@@ -44,25 +64,36 @@ task("deployToken", "Deploys a token and mints sum(TOKEN_DIST) to deployrer")
     }
 
     const tokenFactory = getFactory(Token, wallet);
-    const token = await tokenFactory.deploy(args.name, args.symbol);
+    const token = await tokenFactory.deploy(args.name, args.symbol, {gasPrice:gasPrice});
 
-    const tokenDeployTx = await provider.getTransactionReceipt(
-      token.deployTransaction.hash
-    );
-
-    console.log('\ntoken deployment gas used:', tokenDeployTx.gasUsed.toString());
     console.log('token address:', token.address);
-    console.log("-----------------");
 
-    const totalMint = totalDist(params.TOKEN_DIST);
     console.log('minting token distributions');
-    console.log(params.TOKEN_DIST);
-    console.log('total tokens to mint:', totalMint);
-    await token.mint(wallet.address, totalMint);
+    const confirmTokenMint = await confirmationPrompt.run();
+    if (!confirmTokenMint) {
+      console.log("Token mint aborted");
+      return
+    }
+
+    const mintTx = await token.mint(wallet.address, totalMint, {gasPrice:gasPrice});
 
     console.log('burning Minter Role');
-    await token.renounceMinter();
+
+    const confirmTokenBurnTole = await confirmationPrompt.run();
+    if (!confirmTokenBurnTole) {
+      console.log("Token minter role burn aborted");
+      return
+    }
+    // sleep for 2 seconds bc our nonce keeps getting overlapped
+    await new Promise(r => setTimeout(r, 10000));
+    const renounceTx = await token.renounceMinter({gasPrice:gasPrice});
     console.log("minter burned")
+
+    console.log('deployTx:', token.deployTransaction.hash);
+    console.log('mintTx:', mintTx.hash);
+    console.log('renounceTx', renounceTx.hash);
+
+    console.log("-----------------");
   });
 
 task("deploy", "Deploys factory and uses factory.deployAll to deploy system")
@@ -91,9 +122,11 @@ task("deploy", "Deploys factory and uses factory.deployAll to deploy system")
     );
 
     // total vesting distributions <= token distribution to trust
-    const totalVestingDists = params.VESTING_DIST.amts.reduce((a, b) => a + b);
+    const totalVestingDists = params.VESTING_DIST.amts.reduce(
+      (a, b) => a.add(ethers.BigNumber.from(b)), ethers.BigNumber.from("0")
+    );
     check(
-      params.TOKEN_DIST.trustDist >= totalVestingDists,
+      ethers.BigNumber.from(params.TOKEN_DIST.trustDist).gte(totalVestingDists),
       "Trust contract will not have enough tokens to pay out recipients"
     );
 
@@ -105,6 +138,18 @@ task("deploy", "Deploys factory and uses factory.deployAll to deploy system")
     const wallet = await unconnectedWallet.connect(provider);
 
     // --- Deploy factory ---
+    console.log("-----------------");
+    console.log("Verifying distribution token parameters");
+    const distToken = new ethers.Contract(
+      params.DIST_TOKEN_ADDRESS,
+      Token.abi,
+      wallet
+    );
+    const sumDists = totalDist(params.TOKEN_DIST);
+    check(
+      (await distToken.balanceOf(wallet.address)).gte(sumDists),
+      "Deployer does not have enough tokens for distributions"
+    );
 
     console.log("-----------------");
     console.log(
@@ -125,10 +170,6 @@ task("deploy", "Deploys factory and uses factory.deployAll to deploy system")
     const factoryFactory = getFactory(Factory, wallet);
     const factory = await factoryFactory.deploy();
 
-    const factDeployTx = await provider.getTransactionReceipt(
-      factory.deployTransaction.hash
-    );
-    console.log('\nfactory deployment gas used:', factDeployTx.gasUsed.toString());
     console.log('factory address:', factory.address);
     console.log("-----------------");
 
@@ -162,19 +203,7 @@ task("deploy", "Deploys factory and uses factory.deployAll to deploy system")
       params.MOLOCH_ADDRESS = moloch.address;
     }
 
-    console.log("-----------------");
-    console.log("Verifying distribution token parameters");
-    const distToken = new ethers.Contract(
-      params.DIST_TOKEN_ADDRESS,
-      Token.abi,
-      wallet
-    );
-    const sumDists = totalDist(params.TOKEN_DIST);
-    check(
-      await distToken.balanceOf(wallet.address) >= (sumDists),
-      "Deployer does not have enough tokens for distributions"
-    );
-    console.log(`Approving factory to transfer ${sumDists} tokens from ${wallet.address}`);
+    console.log(`Approving factory to transfer ${ethers.utils.formatEther(sumDists)} tokens from ${wallet.address}`);
     // confirm approval
     const confirmApproval = await confirmationPrompt.run();
     if (!confirmApproval) {
@@ -195,16 +224,17 @@ task("deploy", "Deploys factory and uses factory.deployAll to deploy system")
       `Distribution token address: ${params.DIST_TOKEN_ADDRESS}\n`,
       `Capital token address: ${params.CAP_TOKEN_ADDRESS}\n`,
       `Initial token distributions:\n`,
-      `   Minion: ${params.TOKEN_DIST.minionDist}\n`,
-      `   Transmutation: ${params.TOKEN_DIST.transmutationDist}\n`,
-      `   Knight's Trust: ${params.TOKEN_DIST.trustDist}\n`,
+      `   Minion: ${strToEth(params.TOKEN_DIST.minionDist)}\n`,
+      `   Transmutation: ${strToEth(params.TOKEN_DIST.transmutationDist)}\n`,
+      `   Knight's Trust: ${strToEth(params.TOKEN_DIST.trustDist)}\n`,
       `Contributor vesting period: ${(params.VESTING_PERIOD / 2629800).toFixed(2)} months\n`,
       "Contributor vesting distribution:"
     );
     for (let i = 0; i < vestingDist.amts.length; i++) {
       // TODO: units
       console.log(
-      `   ${vestingDist.recipients[i]} gets ${vestingDist.amts[i]}`
+      `   ${vestingDist.recipients[i]} gets`,
+      `${strToEth(vestingDist.amts[i])} dist tokens`
       );
     }
     console.log("");
@@ -227,9 +257,6 @@ task("deploy", "Deploys factory and uses factory.deployAll to deploy system")
       params.VESTING_DIST.recipients,
       params.VESTING_DIST.amts,
     );
-
-    const sysDeployTx = await provider.getTransactionReceipt(deployReceipt.hash);
-    console.log('\nsystem deployment gas used:', sysDeployTx.gasUsed.toString());
 
     // get deployed addresses
     const filter = factory.filters.Deployment()

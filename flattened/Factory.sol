@@ -478,7 +478,7 @@ contract Transmutation {
     /**
      * @dev Makes a proposal taking tribute from this contract in the form of
      * giveToken and sending _getToken to _applicant as proposal payment
-     * @param _applicant Recipient of the proposal's _giveToken from the moloch
+     * @param _applicant Recipient of the proposal's _getToken from the moloch
      * @param _giveAmt Amount of _giveToken to swap for _getAmt of _getToken
      * @param _getAmt Amount of _getToken to swap for _giveAmt of _giveToken
      * @param _details Proposal details

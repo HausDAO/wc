@@ -12,7 +12,7 @@ const vestingDistribution = {
 };
 const totalDistribution = vestingDistribution.amts.reduce((a, b) => a + b, 0);
 
-const oneYear = 31556926
+const oneYear = 31536000
 
 // --- Moloch parameters ---
 const molochConfig = {

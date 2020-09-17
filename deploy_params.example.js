@@ -1,4 +1,4 @@
-const oneYear = 31556926
+const oneYear = 31536000
 
 const INFURA_API_KEY = "";
 const ETHERSCAN_API_KEY = "";
@@ -68,8 +68,8 @@ const VESTING_DIST = {
 export default {
   MOLOCH_ADDRESS,
   CAP_TOKEN_ADDRESS,
+  DIST_TOKEN_ADDRESS,
   VESTING_PERIOD,
-  HAUS_TOKEN_SYMBOL,
   TOKEN_DIST,
   VESTING_DIST,
   INFURA_API_KEY,
