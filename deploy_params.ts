@@ -1,3 +1,5 @@
+// example deployment parameters
+
 const oneYear = 31536000
 
 const INFURA_API_KEY = "";

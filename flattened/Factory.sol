@@ -527,7 +527,7 @@ contract Transmutation {
     // --- View functions ---
 
     /**
-     * @dev Returns true if usr has shares in the Moloch
+     * @dev Returns true if usr has voting shares in the Moloch
      * @param usr Address to check membership of
      */
     function isMember(address usr) public view returns (bool) {

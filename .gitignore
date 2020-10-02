@@ -4,6 +4,5 @@ typechain/
 coverage*
 cache/
 build/
-deploy_params.ts
 .mnemonic*
 venv

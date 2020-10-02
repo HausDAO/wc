@@ -4,9 +4,9 @@ import path from "path";
 import { task } from "@nomiclabs/buidler/config";
 import flattener from "truffle-flattener";
 
-async function flatten(file: string) {
+async function flatten(dir: string, file: string) {
   const flattenedContract = await flattener([
-    path.posix.resolve(__dirname, "../contracts/" + file)
+    path.posix.resolve(__dirname, dir + file)
   ]);
 
   fs.writeFileSync(
@@ -22,9 +22,10 @@ task("flatten-in-a-less-shitty-way", "Flattens WC contracts to individual files"
       "Minion.sol",
       "Token.sol",
       "Transmutation.sol",
-      "Trust.sol"
+      "Trust.sol",
     ];
 
-    const promises = toFlatten.map(flatten);
+    const promises = toFlatten.map(f => flatten("../contracts/", f));
+    promises.push(flatten("../contracts/moloch/", "Moloch.sol"));
     await Promise.all(promises);
   });

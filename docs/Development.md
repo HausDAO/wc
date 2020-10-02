@@ -5,7 +5,7 @@
 ### Compile contracts
 `yarn build`
 
-### Run tests
+### Run tests (after building)
 `yarn test`
 
 ### Buidler tasks
