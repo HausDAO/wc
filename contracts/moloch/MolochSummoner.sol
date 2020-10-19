@@ -112,7 +112,7 @@ library SafeMath {
     }
 }
 
-contract LiteMultiSummonMoloch is ReentrancyGuard {
+contract Moloch is ReentrancyGuard {
     using SafeMath for uint256;
 
     /***************
@@ -125,7 +125,7 @@ contract LiteMultiSummonMoloch is ReentrancyGuard {
     uint256 public dilutionBound; // default = 3 - maximum multiplier a YES voter will be obligated to pay in case of mass ragequit
     uint256 public processingReward; // default = 0.1 - amount of ETH to give to whoever processes a proposal
     uint256 public summoningTime; // needed to determine the current period
-    bool private initialized; // internally tracks token deployment under eip-1167 proxy pattern
+    bool private initialized; // internally tracks deployment under eip-1167 proxy pattern
 
     address public depositToken; // deposit token contract reference; default = wETH
 
@@ -875,7 +875,7 @@ contract MolochSummoner is CloneFactory {
         uint256 _processingReward,
         uint256[] memory _summonerShares
     ) public returns (address) {
-        LiteMultiSummonMoloch baal = LiteMultiSummonMoloch(createClone(template));
+        Moloch baal = Moloch(createClone(template));
         
         baal.init(
             _summoner,
